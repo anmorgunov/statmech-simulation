@@ -1,0 +1,6 @@
+.env
+/__pycache__/
+*html
+*css
+.mypy_cache
+.DS_Store
