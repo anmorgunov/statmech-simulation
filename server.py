@@ -20,5 +20,11 @@ def game_reset():
     game.reset()
     return jsonify(game.export())
 
+@app.route('/game_analyze')
+def game_analyze():
+    game.analyze_game()
+    # TODO: make a check whether success really happened
+    return jsonify(success=True), 200
+
 if __name__ == '__main__':
     app.run(debug=True)

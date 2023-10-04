@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
-  ratioBarChart = new Chart(document.getElementById("ratioBarChart"), {
+  equipTempBarChart = new Chart(document.getElementById("equipTempBarChart"), {
     type: "bar",
     data: {
-      labels: ["Left", "Right"],
+      labels: ["Carbon", "Oxygen"],
       datasets: [
         {
-          label: "O fraction",
+          label: "Equipartition Temperature",
           data: [0, 0], // Initial data
           backgroundColor: ["rgba(36, 0, 70, 0.6)", "rgba(36, 0, 70, 0.6)"],
           borderColor: ["rgba(36, 0, 70, 1.0)", "rgba(36, 0, 70, 1.0)"],
@@ -17,8 +17,8 @@ document.addEventListener("DOMContentLoaded", function () {
       scales: {
         y: {
           beginAtZero: true,
-          min: 0,
-          max: 100,
+          min: 250,
+          max: 350,
           ticks: {
             stepSize: 10, // Optional: This will ensure ticks at intervals of 10
           },

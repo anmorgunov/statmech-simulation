@@ -4,3 +4,5 @@
 *css
 .mypy_cache
 .DS_Store
+/raw_data/
+graph.py
