@@ -1,6 +1,6 @@
 import numpy as np
 import constants
-from graph import Graph
+from make_figures import FigureMaker
 
 class Particle:
     def __init__(self, x: float, y: float, element: str, mass:float):
@@ -138,7 +138,7 @@ class Game:
         for particle in self.particles:
             elementToSum.setdefault(particle.element, []).append(particle.vx**2 + particle.vy**2)
         for element, sums in elementToSum.items():
-            self.elementToT["equipartition"].setdefault(element, []).append(1/(3 * constants.BOLTZMANN) * (particle.mass/(1000 * constants.AVOGADRO)) * np.mean(sums))
+            self.elementToT["equipartition"].setdefault(element, []).append(constants.TEMP_CONVERSION_FACTOR * 1/(3 * constants.BOLTZMANN) * (particle.mass/(1000 * constants.AVOGADRO)) * np.mean(sums))
 
     def update(self):
         self.time += 1
@@ -166,10 +166,10 @@ class Game:
             "y_velocities_bin_ranges": self.y_velocities_bin_ranges,
         }
         for element, t in self.elementToT["equipartition"].items():
-            data[f"{element.lower()}_equipartition_temperature"] = "{:.2f}".format(np.round(t[-1] * constants.TEMP_CONVERSION_FACTOR, 2))
+            data[f"{element.lower()}_equipartition_temperature"] = "{:.2f}".format(np.round(t[-1], 2))
         return data
 
     def analyze_game(self):
-        graph = Graph()
-        graph.create_fractions_scatter_plot(self.left_fractions, self.right_fractions)
-        
+        figs = FigureMaker()
+        figs.create_fractions_scatter_plot(self.left_fractions, self.right_fractions)
+        figs.create_equipartition_scatter_plot(self.elementToT["equipartition"])

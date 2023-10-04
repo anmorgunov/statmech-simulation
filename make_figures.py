@@ -1,44 +1,71 @@
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os
+from graph import Graph
+import constants
 
 class FigureMaker:
     def __init__(self):
         pass
 
-    def _style_figure(self, figure):
-        figure.update_layout(legend=dict(yanchor="top", xanchor="left", x=0.91, y=0.99), plot_bgcolor="white", paper_bgcolor="white")
-
-    def _save_figure(self, figure, fname, html=False, jpg=False):
-        if html:
-            figure.write_html(os.path.join(os.getcwd(), "figures", "html", f"{fname}.html"), include_plotlyjs="cdn")
-        if jpg:
-            figure.write_image(os.path.join(os.getcwd(), "figures", "jpg", f"{fname}.jpg"), scale=3.0)
-
-
     def create_fractions_scatter_plot(self, left_fractions, right_fractions):
         fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x=list(range(len(left_fractions))),
-                y=left_fractions,
-                mode="lines",
-                name="Left Fraction",
-            )
-        )
+        graph = Graph()
         fig.add_trace(
             go.Scatter(
                 x=list(range(len(right_fractions))),
                 y=right_fractions,
                 mode="lines",
                 name="Right Fraction",
+                line_color="#4361ee"
             )
         )
-        fig.update_layout(
-            title="Fraction of Oxygen Atoms in Left and Right Compartments",
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(len(left_fractions))),
+                y=left_fractions,
+                mode="lines",
+                name="Left Fraction",
+                line_color="#b5179e"
+            )
+        )
+        fig.add_shape(
+            go.layout.Shape(
+                type="line",
+                x0=0,
+                x1=len(left_fractions) - 1,  # Assuming left_fractions and right_fractions are of the same length
+                y0=50,
+                y1=50,
+                line=dict(color="Grey", width=2, dash="dash")
+            )
+        )
+        graph.update_parameters(dict(
+            title="<b>Fractions of Oxygen Atoms in Left and Right Compartments</b>",
             xaxis_title="Timestep",
             yaxis_title="Fraction",
-        )
-        self._style_figure(fig)
-        self._save_figure(fig, "compartment_fractions", html=True, jpg=True)
+        ))
+        graph.style_figure(fig)
+        graph.save_figure(figure=fig, path=os.path.join(os.getcwd(), "figures"), fname="compartment_fractions", html=True, jpg=True, scale=4.0)
 
+
+    def create_equipartition_scatter_plot(self, element_to_temp):
+        fig = go.Figure()
+        graph = Graph()
+        elemToColor = {"C": "#2b2d42", "O": "#ef233c"}
+        for element, temp in element_to_temp.items():
+            fig.add_trace(
+                go.Scatter(
+                    x=list(range(len(temp))),
+                    y=temp,
+                    mode="lines",
+                    name=f"{element} Temperature",
+                    line_color=elemToColor[element]
+                )
+            )
+        graph.update_parameters(dict(
+            title="<b>Equipartition Temperature</b>",
+            xaxis_title="Timestep",
+            yaxis_title="Temperature (K)",
+        ))
+        graph.style_figure(fig)
+        graph.save_figure(figure=fig, path=os.path.join(os.getcwd(), "figures"), fname="equipartition_temperature", html=True, jpg=True, scale=4.0)
