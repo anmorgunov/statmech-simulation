@@ -1,16 +1,44 @@
 import numpy as np
 import constants
 from make_figures import FigureMaker
+from scipy.optimize import curve_fit
+from tqdm import tqdm
+
+class Grid:
+    def __init__(self, width, height, cell_size):
+        self.cell_size = cell_size
+        self.cols = int(width / cell_size)
+        self.rows = int(height / cell_size)
+        self.cells = [[[] for _ in range(self.cols)] for _ in range(self.rows)]
+
+    def add_particle(self, particle):
+        col = min(int(particle.x // self.cell_size), self.cols - 1)
+        row = min(int(particle.y // self.cell_size), self.rows - 1)
+        # print(f"{row=}, {col=}, {self.rows=}, {self.cols=}")
+        self.cells[row][col].append(particle)
+
+    def get_nearby_particles(self, particle):
+        col = int(particle.x / self.cell_size)
+        row = int(particle.y / self.cell_size)
+        nearby_particles = []
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                new_row = row + i
+                new_col = col + j
+                if 0 <= new_row < self.rows and 0 <= new_col < self.cols:
+                    nearby_particles.extend(self.cells[new_row][new_col])
+        return nearby_particles
 
 class Particle:
     def __init__(self, x: float, y: float, element: str, mass:float):
         self.x = x
         self.y = y
         self.element = element
-        self.angle = 2 * np.pi * np.random.rand()  # Random direction
-        self.vx = constants.BASE_SPEED * np.cos(self.angle)
-        self.vy = constants.BASE_SPEED * np.sin(self.angle)
-        self.mass = 1 # mass
+        self.angle = 2 * np.pi * np.random.uniform(0,1)  # Random direction
+        initial_speed = constants.MOST_PROBABLE_SPEED(constants.BASE_TEMP, 1) # constants.BASE_SPEED
+        self.vx = initial_speed * np.cos(self.angle)
+        self.vy = initial_speed * np.sin(self.angle)
+        self.mass = 1 #mass
 
     def move(self):
         # Update position based on velocity
@@ -72,15 +100,16 @@ class Game:
     def __init__(self, num_particles):
         self.particles = []
         self.atomToCount = {}
-        x_high_offset = -constants.PARTICLE_RADIUS*2
         y_high_offset = -constants.PARTICLE_RADIUS*2
         y_low_offset = constants.PARTICLE_RADIUS*2
         for _ in range(num_particles):
             if np.random.rand(1) < 0.5:
                 x_low_offset = constants.WIDTH // 2 + constants.PARTICLE_RADIUS*2
+                x_high_offset = -constants.PARTICLE_RADIUS*2
                 element = "O"
             else:
                 x_low_offset = constants.PARTICLE_RADIUS*2
+                x_high_offset = -constants.WIDTH // 2 - constants.PARTICLE_RADIUS*2
                 element = "C"
             self.atomToCount[element] = self.atomToCount.get(element, 0) + 1
             x = np.random.uniform(x_low_offset, x_high_offset + constants.WIDTH)
@@ -127,7 +156,7 @@ class Game:
             value = velocities[0]
             bin_ranges = [(value, value) for _ in range(bin_count)]
         else:
-            bins, edges = np.histogram(velocities, bins=bin_count)
+            bins, edges = np.histogram(velocities, bins=bin_count, density=True)
             # Convert bin edges to bin ranges for better clarity on the frontend
             bin_ranges = [(edges[i], edges[i+1]) for i in range(bin_count)]
         setattr(self, f"{prefix}_velocities_bins", bins.tolist())
@@ -140,18 +169,48 @@ class Game:
         for element, sums in elementToSum.items():
             self.elementToT["equipartition"].setdefault(element, []).append(constants.TEMP_CONVERSION_FACTOR * 1/(3 * constants.BOLTZMANN) * (particle.mass/(1000 * constants.AVOGADRO)) * np.mean(sums))
 
+    def _maxwell_boltzmann_distribution(self, m):
+        return lambda v2, T: 4 * np.pi * (m/(2 * np.pi * constants.BOLTZMANN * T))**(3/2) * v2 * np.exp(-m * v2/(2 * constants.BOLTZMANN * T))
+
+    def find_maxwell_boltzmann_temperature(self):
+        elementToSum = {}
+        for particle in self.particles:
+            elementToSum.setdefault(particle.element, []).append(particle.vx**2 + particle.vy**2)
+
+        for element, velocities in elementToSum.items():
+            hist, bin_edges = np.histogram(velocities, bins=20, density=True)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+            # Fit the Maxwell-Boltzmann distribution to the histogram
+            abs_mass = 1 / (1000 * constants.AVOGADRO) # constants.ATOMS_LIBRARY["mass"][element]
+            popt, _ = curve_fit(self._maxwell_boltzmann_distribution(abs_mass), bin_centers, hist)
+            self.elementToT["boltzmann"][element] = popt[0]
+
     def update(self):
         self.time += 1
+        grid = Grid(constants.WIDTH, constants.HEIGHT, int(5 * constants.PARTICLE_RADIUS))
+
+        # Add particles to grid
         for particle in self.particles:
             particle.move()
+            grid.add_particle(particle)
+
+        # Collision resolution using grid
+        for particle in self.particles:
+            nearby_particles = grid.get_nearby_particles(particle)
+            for other in nearby_particles:
+                if particle != other:
+                    particle.check_collisions(other)
 
         # Collision resolution
-        for i in range(len(self.particles)):
-            for j in range(i + 1, len(self.particles)):
-                self.particles[i].check_collisions(self.particles[j])
+        # for i in range(len(self.particles)):
+        #     for j in range(i + 1, len(self.particles)):
+        #         self.particles[i].check_collisions(self.particles[j])
+
         self.update_compartment_fractions()
         self.compute_velocity_distribution()
         self.find_equipartition_temperature()
+        # self.find_maxwell_boltzmann_temperature()
 
     def export(self):
         data = {
@@ -167,9 +226,18 @@ class Game:
         }
         for element, t in self.elementToT["equipartition"].items():
             data[f"{element.lower()}_equipartition_temperature"] = "{:.2f}".format(np.round(t[-1], 2))
+        # for element, t in self.elementToT["boltzmann"].items():
+        #     data[f"{element.lower()}_boltzmann_temperature"] = "{:.2f}".format(np.round(t, 2))
         return data
 
     def analyze_game(self):
         figs = FigureMaker()
         figs.create_fractions_scatter_plot(self.left_fractions, self.right_fractions)
         figs.create_equipartition_scatter_plot(self.elementToT["equipartition"])
+
+if __name__ == "__main__":
+    game = Game(200)
+    for _ in tqdm(range(10_000)):
+        game.update()
+    game.analyze_game()
+    # print(game.export())

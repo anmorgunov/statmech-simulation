@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
-  equipTempBarChart = new Chart(document.getElementById("equipTempBarChart"), {
+  mbdistTempBarChart = new Chart(document.getElementById("mbdistTempBarChart"), {
     type: "bar",
     data: {
       labels: ["Carbon", "Oxygen"],
       datasets: [
         {
-          label: "Equipartition Temperature",
+          label: "Maxwell-Boltzmann Temperature",
           data: [0, 0], // Initial data
           backgroundColor: ["rgba(0, 119, 182, 0.6)", "rgba(0, 119, 182, 0.6)"],
           borderColor: ["rgba(0, 119, 182, 1.0)", "rgba(0, 119, 182, 1.0)"],

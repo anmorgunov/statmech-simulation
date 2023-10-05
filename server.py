@@ -4,7 +4,7 @@ from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
 
-game = Game(100)  # Initialize your game
+game = Game(200)  # Initialize your game
 
 @app.route('/')
 def index():

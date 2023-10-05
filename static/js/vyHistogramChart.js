@@ -7,8 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
         {
           label: "y-component of velocity",
           data: [], // We'll populate this from the server data
-          backgroundColor: "rgba(255, 99, 132, 0.6)",
-          borderColor: "rgba(255, 99, 132, 1)",
+          backgroundColor: "rgba(0, 180, 216, 0.6)",
+          borderColor: "rgba(0, 180, 216, 1)",
           borderWidth: 1,
         },
       ],
@@ -26,8 +26,8 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         y: {
           beginAtZero: true,
-          min: 0,
-          max: 30,
+          // min: 0,
+          // max: 0.5,
           title: {
             display: true,
             text: "Count",

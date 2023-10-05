@@ -7,8 +7,10 @@ document.addEventListener("DOMContentLoaded", function () {
         {
           label: "O fraction",
           data: [0, 0], // Initial data
-          backgroundColor: ["rgba(36, 0, 70, 0.6)", "rgba(36, 0, 70, 0.6)"],
-          borderColor: ["rgba(36, 0, 70, 1.0)", "rgba(36, 0, 70, 1.0)"],
+          // backgroundColor: ["rgba(3, 4, 94, 0.6)", "rgba(3, 4, 94, 0.6)"],
+          // borderColor: ["rgba(3, 4, 94, 1.0)", "rgba(3, 4, 94, 1.0)"],
+          backgroundColor: ["rgba(2, 62, 138, 0.6)", "rgba(2, 62, 138, 0.6)"],
+          borderColor: ["rgba(2, 62, 138, 1.0)", "rgba(2, 62, 138, 1.0)"],
           borderWidth: 1,
         },
       ],
