@@ -103,11 +103,6 @@ That's how I ended up implementing the $v_x=v_0 \cos\phi$ and $v_y=v_0 \sin \phi
 \begin{warningbox}
     As we will see shortly, there are reasons to believe that I have bugs/mistakes in the current implementation of the collision algorithm. If that's the case, it may turn out that the correct implementation of the collision algorithm will not result in the Maxwell-Boltzmann distribution.
 \end{warningbox}
-
-\subsection{Identical particles}
-If we set both kinds of particles to have $m=1$ and initial temperature
-$T=\qty{300}{K}$, and create $n=200$ of those, we can see that particles diffuse and thermalize (Figures \ref{fig:compartment_fractions} and \ref{fig:temperature}). Somewhat not surprisingly, the average temperature of the system is near $T=\qty{300}{K}$, but fluctuates quite significantly.
-
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\linewidth]{../figures/jpg/n200_m1_10k/compartment_fractions.jpg}
@@ -122,10 +117,39 @@ $T=\qty{300}{K}$, and create $n=200$ of those, we can see that particles diffuse
     \label{fig:temperature}
 \end{figure}
 
+\subsection{Identical particles}
+If we set both kinds of particles to have $m=1$ and initial temperature
+$T=\qty{300}{K}$, and create $n=200$ of those, we can see that particles diffuse and thermalize (Figures \ref{fig:compartment_fractions} and \ref{fig:temperature}). Somewhat not surprisingly, the average temperature of the system is near $T=\qty{300}{K}$, but fluctuates quite significantly.
+
+
 \subsection{Different masses}
-One of my primary objectives was to fill the left compartment of the box with, say, carbon atoms at $T_1$ and the right compartment with, say, oxygen atoms at $T_2$. The choice of elements is superficial, it's suffice to choose two elements with different masses (perhaps H and He would be a better choice)
+One of my primary objectives was to fill the left compartment of the box with, say, carbon atoms at $T_1$ and the right compartment with, say, oxygen atoms at $T_2$, and see whether/how the two sets of particles thermalize. The choice of elements is superficial, it's suffice to choose two elements with different masses (perhaps H and He would be a better choice). Importantly, $T_1\neq T_2$. If the final temperature matches the one predicted by the heat transfer equation, that would further solidify the idea that the mechanism for thermalization is the collisions between particles.
+
+Unfortunately, when I fill the compartments even with $T_1=T_2=\qty{3000}{K}$ (such high temperature is chosen for particles to move fast enough), after some timesteps the temperature starts to blow up (Figure \ref{fig:temperature-explosion}). Obviously, this indicates that there has to be a bug in my code, and I suspect it has to do with the collision resolution algorithm. As much as I'm tempted to keep digging until I resolve this, I have to postpone it.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\linewidth]{../figures/jpg/equipartition_temperature_explosion.jpg}
+    \caption{Explosion of Temperature when particles of different masses are introduced}
+    \label{fig:temperature-explosion}
+\end{figure}
 
 \section{Future Work}
+Here's a list of tasks I could potentially do:
+
+\begin{enumerate}
+    \item Find the mistake in the simulation algorithm
+    \item Expand the UI of the simulation to allow for more customization: choosing elements, initial temperatures, numbers of atoms. 
+    \item Perform the simulation (once implemented correctly) with different number of particles and see whether the magnitude of fluctuations in temperature scales as $1/\sqrt{N}$.
+    \item Perform the simulation with different initial temperatures and see whether the final temperature matches the one predicted by the heat transfer equation.
+    \item Investigate inelastic collisions.
+    \item Introduce the potential energy term into the simulation. That is, add interatomic interactions.
+    \item Trace a trajectory of movement of a single particle in the box.
+    \item Make particles to have non-zero volume. I.e. have particles with different sizes.
+    \item Explore whether we can model chemical reactions.
+    \item Introduce unit tests for significant parts of the code.
+    \item Improve documentation.
+\end{enumerate}
 
 
 

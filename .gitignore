@@ -6,3 +6,13 @@
 .DS_Store
 /raw_data/
 graph.py
+
+# Latex Related
+*.aux
+*.bbl
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.xdv
