@@ -38,7 +38,7 @@ class Particle:
         initial_speed = constants.MOST_PROBABLE_SPEED(constants.BASE_TEMP, 1) # constants.BASE_SPEED
         self.vx = initial_speed * np.cos(self.angle)
         self.vy = initial_speed * np.sin(self.angle)
-        self.mass = 1 #mass
+        self.mass = 1 # mass
 
     def move(self):
         # Update position based on velocity
