@@ -28,8 +28,8 @@ document.addEventListener("DOMContentLoaded", function () {
           },
           y: {
             beginAtZero: true,
-            // min: 0,
-            // max: 0.5,
+            min: 0,
+            max: 0.6,
             title: {
               display: true,
               text: "Count",

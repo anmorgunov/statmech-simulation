@@ -18,7 +18,7 @@ import numpy as np
 def fill_atoms_library():
     with open("raw_data/PeriodicTableJSON.json", "r") as f:
         data =json.load(f)
-    elements = set("H C N O".split())
+    elements = set("H He C N O F Ne Ar Kr Xe".split())
     for array in data['elements']:
         if array['symbol'] in elements:
             ATOMS_LIBRARY['mass'][array['symbol']] = array['atomic_mass']
