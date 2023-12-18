@@ -1,5 +1,4 @@
 import numpy as np
-import constants
 from scipy.optimize import curve_fit
 from tqdm import tqdm
 from typing import Optional, List, Tuple
@@ -121,6 +120,7 @@ class TwoCompartments:
         self.right_fractions = []
         self.time = 0
         self.elementToT = {"equipartition": {}, "boltzmann": {}}
+        self.unifpVals = {"chi": [], "chi-rel": [], "ks": []}
         self.velocity_angles = []
         self.update_compartment_fractions()
         self.compute_velocity_distribution(initialization=True)
@@ -172,10 +172,6 @@ class TwoCompartments:
             for i in range(len(self.particles)):
                 for j in range(i + 1, len(self.particles)):
                     self.particles[i].check_collision(self.particles[j])
-            # for particle_i in self.particles:
-            #     for particle_j in self.particles:
-            #         if particle_i is not particle_j:
-            #             particle_i.check_collision(particle_j)
 
         if self.time % self.update_frequency == 0:
             self.update_compartment_fractions()
@@ -183,7 +179,6 @@ class TwoCompartments:
             self.find_equipartition_temperature()
             self.assess_uniformity()
             self.time = 0
-        # self.find_maxwell_boltzmann_temperature()
 
     def update_compartment_fractions(self):
         left_count = sum(1 for p in self.particles if p.x < WIDTH / 2 and p.special)
@@ -232,9 +227,9 @@ class TwoCompartments:
         _, pval_ks = stat_signif.kolmogorov_smirnov_uniform_test(
             self.angle_velocities_bins
         )
-        self.unif_pval_ks = f"{(pval_ks)*100:.2f}%"
-        self.unif_pval_chi = f"{(pval_chi)*100:.2f}%"
-        self.unif_pval_chi_rel = f"{(pval_chi_rel)*100:.2f}%"
+        self.unifpVals["chi"].append(pval_chi)
+        self.unifpVals["chi-rel"].append(pval_chi_rel)
+        self.unifpVals["ks"].append(pval_ks)
 
     def bin_velocities(
         self, velocities, bin_count, prefix, initialization=False, normalize=True
@@ -267,6 +262,7 @@ class TwoCompartments:
             )
 
     def export_statistics(self):
+        perc = lambda x: "{:.2f}%".format(x * 100)
         data = {
             "left_fraction": self.left_fractions[-1],
             "right_fraction": self.right_fractions[-1],
@@ -274,14 +270,9 @@ class TwoCompartments:
             "abs_velocities_bin_ranges": self.abs_velocities_bin_ranges,
             "angle_velocities_bins": self.angle_velocities_bins,
             "angle_velocities_bin_ranges": self.angle_velocities_bin_ranges,
-            # "uniformity_confidence": self.uniformity_confidence,
-            "unif_pval_ks": self.unif_pval_ks,
-            "unif_pval_chi": self.unif_pval_chi,
-            "unif_pval_chi_rel": self.unif_pval_chi_rel,
-            # "x_velocities_bins": self.x_velocities_bins,
-            # "x_velocities_bin_ranges": self.x_velocities_bin_ranges,
-            # "y_velocities_bins": self.y_velocities_bins,
-            # "y_velocities_bin_ranges": self.y_velocities_bin_ranges,
+            "unif_pval_ks": perc(self.unifpVals["ks"][-1]),
+            "unif_pval_chi": perc(self.unifpVals["chi"][-1]),
+            "unif_pval_chi_rel": perc(self.unifpVals["chi-rel"][-1]),
             "min_temp": self.min_temp,
             "max_temp": self.max_temp,
             "v_mp_freq": self.v_mp_freq,
@@ -301,10 +292,13 @@ class TwoCompartments:
         }
         return data
 
-    def analyze_game(self):
+    def analyze_game(self, fname: Optional[str] = None):
         figs = FigureMaker()
-        figs.create_fractions_scatter_plot(self.left_fractions, self.right_fractions)
-        figs.create_equipartition_scatter_plot(self.elementToT["equipartition"])
+        figs.create_fractions_scatter_plot(
+            self.left_fractions, self.right_fractions, fname
+        )
+        figs.create_equipartition_scatter_plot(self.elementToT["equipartition"], fname)
+        figs.create_pval_scatter_plot(self.unifpVals.values(), fname)
 
 
 if __name__ == "__main__":
