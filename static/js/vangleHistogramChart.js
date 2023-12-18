@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
-  vabsHistogramChart = new Chart(
-    document.getElementById("vabsHistogramChart"),
+  vangleHistogramChart = new Chart(
+    document.getElementById("vangleHistogramChart"),
     {
       type: "bar",
       data: {
@@ -9,8 +9,10 @@ document.addEventListener("DOMContentLoaded", function () {
           {
             label: "Frequency",
             data: [], // We'll populate this from the server data
-            backgroundColor: "rgba(72, 202, 228, 0.6)",
-            borderColor: "rgba(72, 202, 228, 1)",
+            backgroundColor: "rgba(0, 204, 102, 0.6)",
+            borderColor: "rgba(0, 204, 102, 1.0)",
+            // backgroundColor: "rgba(255, 77, 109, 0.6)",
+            // borderColor: "rgba(255, 77, 109, 1)",
             borderWidth: 1,
           },
         ],
@@ -20,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
           x: {
             title: {
               display: true,
-              text: "Velocity Range",
+              text: "Angle Range",
             },
             ticks: {
               display: false,

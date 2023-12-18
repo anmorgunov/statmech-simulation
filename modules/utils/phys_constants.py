@@ -1,13 +1,12 @@
 import json
 import numpy as np
+from scipy.integrate import quad
 
 
 AVOGADRO = 6.022_140_76e23
 BOLTZMANN = 1.380_649e-23
-R = 8.314_462#_618_153_24
-MOST_PROBABLE_SPEED = (
-    lambda T, mass: np.sqrt(3 * R * T / (mass / (1000))) / 1000
-)
+R = 8.314_462  # _618_153_24
+MOST_PROBABLE_SPEED = lambda T, mass: np.sqrt(3 * R * T / (mass / (1000))) / 1000
 TEMP_CONVERSION_FACTOR = 10**6
 
 # ATOMS_LIBRARY = {
@@ -30,6 +29,22 @@ ATOMS_LIBRARY = {
 }
 
 
+def most_probable_freq(temperature, mass):
+    v_mp = MOST_PROBABLE_SPEED(temperature, mass)
+    maxwell_boltzmann = (
+        lambda speed: 4
+        * np.pi
+        * (mass / (2 * np.pi * 1000 * R * temperature)) ** (3 / 2)
+        * speed**2
+        * np.exp(-mass * speed**2 / (2 * R * temperature))
+    )
+    prob_mp = quad(maxwell_boltzmann, v_mp - 0.15, v_mp + 0.15)[0]
+    prob_all = quad(maxwell_boltzmann, 0, v_mp *1)[0]
+    return prob_mp / prob_all
+    print(f"Prob for {v_mp=}: {prob_mp=}, {prob_all=}, {prob_mp / prob_all=}")
+    pass
+
+
 def fill_atoms_library():
     with open("raw_data/PeriodicTableJSON.json", "r") as f:
         data = json.load(f)
@@ -43,5 +58,6 @@ def fill_atoms_library():
 
 
 if __name__ == "__main__":
-    fill_atoms_library()
+    # fill_atoms_library()
+    most_probable_freq(300, ATOMS_LIBRARY["C"]["mass"])
     pass

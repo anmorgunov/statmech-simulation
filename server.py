@@ -33,15 +33,28 @@ parser.add_argument(
     help="Elements of the right compartment",
 )
 parser.add_argument(
-    "-t", "--temperature", type=int, default=300, help="Temperature of the system"
+    "-lt", "--lefttemperature", type=int, default=300, help="Temperature of the left element"
 )
+parser.add_argument(
+    "-rt",
+    "--righttemperature",
+    type=int,
+    default=300,
+    help="Temperature of the right element"
+)
+parser.add_argument("-qt", "--quadtree", action="store_true", help="Use quadtree")
+parser.add_argument("-u", "--updatefrequency", type=int, default=100, help="Game update frequency")
 args = parser.parse_args()
+
 game = TwoCompartments(
     num_left=args.numleft,
     num_right=args.numright,
     left_atom=args.leftatom,
     right_atom=args.rightatom,
-    temperature=args.temperature,
+    left_temperature=args.lefttemperature,
+    right_temperature=args.righttemperature,
+    use_quadtree=args.quadtree,
+    update_frequency=args.updatefrequency,
 )
 
 
@@ -53,13 +66,18 @@ def index():
 @app.route("/game_state")
 def game_state():
     game.update()
-    return jsonify(game.export())
+    return jsonify(game.export_particles())
+
+@app.route("/game_stats")
+def game_stats():
+    return jsonify(game.export_statistics())
+
 
 
 @app.route("/game_reset")
 def game_reset():
     game.reset()
-    return jsonify(game.export())
+    return jsonify(game.export_particles())
 
 
 @app.route("/game_analyze")

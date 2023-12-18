@@ -9,8 +9,8 @@ document.addEventListener("DOMContentLoaded", function () {
           data: [0, 0], // Initial data
           // backgroundColor: ["rgba(3, 4, 94, 0.6)", "rgba(3, 4, 94, 0.6)"],
           // borderColor: ["rgba(3, 4, 94, 1.0)", "rgba(3, 4, 94, 1.0)"],
-          backgroundColor: ["rgba(2, 62, 138, 0.6)", "rgba(2, 62, 138, 0.6)"],
-          borderColor: ["rgba(2, 62, 138, 1.0)", "rgba(2, 62, 138, 1.0)"],
+          backgroundColor: ["rgba(255, 77, 109, 0.6)", "rgba(255, 77, 109, 0.6)"],
+          borderColor: ["rgba(255, 77, 109, 1)", "rgba(255, 77, 109, 1)"],
           borderWidth: 1,
         },
       ],

@@ -75,8 +75,8 @@ class Particle:
         return {
             "x": self.x,
             "y": self.y,
-            "color": self.color,
-            "radius": self.radius,
+            # "color": self.color,
+            # "radius": self.radius,
         }
 
     def __repr__(self):

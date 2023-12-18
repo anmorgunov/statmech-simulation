@@ -7,8 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
         {
           label: "Equipartition Temperature",
           data: [0, 0], // Initial data
-          backgroundColor: ["rgba(0, 119, 182, 0.6)", "rgba(0, 119, 182, 0.6)"],
-          borderColor: ["rgba(0, 119, 182, 1.0)", "rgba(0, 119, 182, 1.0)"],
+          backgroundColor: ["rgba(251, 176, 45, 0.6)", "rgba(251, 176, 45, 0.6)"],
+          borderColor: ["rgba(251, 176, 45, 1.0)", "rgba(251, 176, 45, 1.0)"],
           borderWidth: 1,
         },
       ],
