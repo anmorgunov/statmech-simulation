@@ -15,17 +15,72 @@ TEMP_CONVERSION_FACTOR = 10**6
 # }
 
 ATOMS_LIBRARY = {
-    "H": {"mass": 1.008, "color": "#ffffff", "radius": 31},
-    "He": {"mass": 4.0026022, "color": "#d9ffff", "radius": 28},
-    "C": {"mass": 12.011, "color": "#909090", "radius": 77},
-    "N": {"mass": 14.007, "color": "#3050f8", "radius": 71},
-    "O": {"mass": 15.999, "color": "#ff0d0d", "radius": 66},
-    "F": {"mass": 18.9984031636, "color": "#90e050", "radius": 64},
-    "Ne": {"mass": 20.17976, "color": "#b3e3f5", "radius": 58},
-    "S": {"mass": 32.06, "color": "#ffff30", "radius": 105},
-    "Ar": {"mass": 39.9481, "color": "#80d1e3", "radius": 106},
-    "Kr": {"mass": 83.7982, "color": "#5cb8d1", "radius": 116},
-    "Xe": {"mass": 131.2936, "color": "#429eb0", "radius": 141},
+    "H": {
+        "mass": 1.008,
+        "color": "#b5e48c",
+        "soft_color": "rgba(181, 228, 140, 0.6)",
+        "radius": 31,
+    },
+    "C": {
+        "mass": 12.011,
+        "color": "#333333",
+        "soft_color": "rgba(51, 51, 51, 0.6)",
+        "radius": 77,
+    },
+    "N": {
+        "mass": 14.007,
+        "color": "#072ac8",
+        "soft_color": "rgba(7, 42, 200, 0.6)",
+        "radius": 71,
+    },
+    "O": {
+        "mass": 15.999,
+        "color": "#ff0000",
+        "soft_color": "rgba(255, 0, 0, 0.6)",
+        "radius": 66,
+    },
+    "F": {
+        "mass": 18.9984031636,
+        "color": "#6a040f",
+        "soft_color": "rgba(106, 4, 15, 0.6)",
+        "radius": 64,
+    },
+    "S": {
+        "mass": 32.06,
+        "color": "#fab23d",
+        "soft_color": "rgba(250, 178, 61, 0.6)",
+        "radius": 105,
+    },
+    "He": {
+        "mass": 4.0026022,
+        "color": "#e0aaff",
+        "soft_color": "rgba(224, 170, 255, 0.6)",
+        "radius": 28,
+    },
+    "Ne": {
+        "mass": 20.17976,
+        "color": "#c77dff",
+        "soft_color": "rgba(199, 125, 255, 0.6)",
+        "radius": 58,
+    },
+    "Ar": {
+        "mass": 39.9481,
+        "color": "#9d4edd",
+        "soft_color": "rgba(157, 78, 221, 0.6)",
+        "radius": 106,
+    },
+    "Kr": {
+        "mass": 83.7982,
+        "color": "#7b2cbf",
+        "soft_color": "rgba(123, 44, 191, 0.6)",
+        "radius": 116,
+    },
+    "Xe": {
+        "mass": 131.2936,
+        "color": "#3c096c",
+        "soft_color": "rgba(60, 9, 108, 0.6)",
+        "radius": 141,
+    },
 }
 
 
@@ -39,7 +94,7 @@ def most_probable_freq(temperature, mass):
         * np.exp(-mass * speed**2 / (2 * R * temperature))
     )
     prob_mp = quad(maxwell_boltzmann, v_mp - 0.15, v_mp + 0.15)[0]
-    prob_all = quad(maxwell_boltzmann, 0, v_mp *1)[0]
+    prob_all = quad(maxwell_boltzmann, 0, v_mp * 1)[0]
     return prob_mp / prob_all
     print(f"Prob for {v_mp=}: {prob_mp=}, {prob_all=}, {prob_mp / prob_all=}")
     pass

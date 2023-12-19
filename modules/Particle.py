@@ -1,4 +1,5 @@
 import numpy as np
+from .EnergyWall import EnergyWall
 
 WIDTH = 800
 HEIGHT = 500
@@ -13,8 +14,8 @@ class Particle:
         initial_speed: float,
         radius: float,
         mass: float,
-        color:str,
-        special:bool=False
+        color: str,
+        special: bool = False,
     ):
         if x < radius or x > WIDTH - radius:
             raise ValueError(f"x must be between {radius} and {WIDTH - radius}")
@@ -34,6 +35,18 @@ class Particle:
         self.radius = radius
         self.color = color
         self.special = special
+
+    def check_wall_collision(self, wall:EnergyWall): 
+        """
+        Check for collision with the energy wall and update velocities.
+        """
+        if self.x - self.radius <= wall.position <= self.x + self.radius:
+            wall.interact_with_particle(self)
+            # adjust position to avoid tunneling
+            if self.x < wall.position:
+                self.x = wall.position - self.radius
+            else:
+                self.x = wall.position + self.radius
 
 
     def move(self):

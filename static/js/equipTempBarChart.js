@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
   equipTempBarChart = new Chart(document.getElementById("equipTempBarChart"), {
     type: "bar",
     data: {
-      labels: ["Carbon", "Oxygen"],
+      labels: ["Label A", "Label B"],
       datasets: [
         {
           label: "Equipartition Temperature",

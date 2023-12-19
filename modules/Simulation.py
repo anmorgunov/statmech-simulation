@@ -7,12 +7,19 @@ from .Figures import FigureMaker
 from .Particle import Particle
 from .Grid import Grid
 from .Quadtree import QuadtreeNode
+from .EnergyWall import EnergyWall
 from .utils import phys_constants as cnst
 from .utils import significance as stat_signif
 
 WIDTH = 800
 HEIGHT = 500
 
+from datetime import datetime
+
+
+def get_timestamp():
+    current_datetime = datetime.now()
+    return current_datetime.strftime("%Y-%m-%d %H:%M")
 
 class ParticleIterable:
     def __init__(self, left, right):
@@ -48,12 +55,14 @@ class TwoCompartments:
         update_frequency: int = 100,
     ):
         # self.particles = []
-        min_mass = min(
+        self.energy_wall = EnergyWall(WIDTH // 2)
+        self.max_mass = max(
             cnst.ATOMS_LIBRARY[atom]["mass"] for atom in [left_atom, right_atom]
         )
+
         self.min_temp = min(left_temperature, right_temperature)
         self.max_temp = max(left_temperature, right_temperature)
-        v_mp_freq = cnst.most_probable_freq(self.max_temp, min_mass)
+        # v_mp_freq = cnst.most_probable_freq(self.min_temp, max_mass)
         self.init_params = {
             "num_left": num_left,
             "left_atom": left_atom,
@@ -64,7 +73,12 @@ class TwoCompartments:
             "use_quadtree": use_quadtree,
             "update_frequency": update_frequency,
         }
-        self.v_mp_freq = v_mp_freq
+        self.num_left = num_left
+        self.left_atom = left_atom
+        self.num_right = num_right
+        self.right_atom = right_atom
+
+        self.v_mp_freq = 2
         self.use_quadtree = use_quadtree
         self.update_frequency = update_frequency
         self.max_radius = 0
@@ -100,6 +114,8 @@ class TwoCompartments:
             likely_speed = cnst.MOST_PROBABLE_SPEED(temperature, atom_data["mass"])
             self.particlesStyle[f"{x_compartment}_radius"] = radius
             self.particlesStyle[f"{x_compartment}_color"] = atom_data["color"]
+            self.particlesStyle[f"{x_compartment}_soft"] = atom_data["soft_color"]
+            self.particlesStyle[f"{x_compartment}_name"] = atom
 
             container.append(
                 Particle(
@@ -122,9 +138,11 @@ class TwoCompartments:
         self.elementToT = {"equipartition": {}, "boltzmann": {}}
         self.unifpVals = {"chi": [], "chi-rel": [], "ks": []}
         self.velocity_angles = []
+        self.bin_edges = None
         self.update_compartment_fractions()
-        self.compute_velocity_distribution(initialization=True)
         self.find_equipartition_temperature()
+        self.compute_velocity_distribution(initialization=True)
+        self.update_v_mp_freq()
         self.assess_uniformity()
 
         if self.use_quadtree:
@@ -156,7 +174,7 @@ class TwoCompartments:
 
         for particle in self.particles:
             particle.move()
-
+            particle.check_wall_collision(self.energy_wall)
             if self.use_quadtree:
                 self.quadtree.insert(particle)
 
@@ -175,9 +193,10 @@ class TwoCompartments:
 
         if self.time % self.update_frequency == 0:
             self.update_compartment_fractions()
-            self.compute_velocity_distribution()
             self.find_equipartition_temperature()
+            self.compute_velocity_distribution()
             self.assess_uniformity()
+            self.update_v_mp_freq()
             self.time = 0
 
     def update_compartment_fractions(self):
@@ -191,22 +210,44 @@ class TwoCompartments:
         self.right_fractions.append(self.right_fraction)
 
     def compute_velocity_distribution(self, initialization: bool = False):
-        self.abs_velocities = [np.sqrt(p.vx**2 + p.vy**2) for p in self.particles]
-        # self.velocity_angles = [np.arctan2(p.vy, p.vx) for p in self.particles]
-        # self.x_velocities = [p.vx**2 for p in self.particles]
-        # self.y_velocities = [p.vy**2 for p in self.particles]
+        assert self.elementToSpeed, "Must call find_equipartition_temperature first"
+        if not initialization and self.bin_edges is None:
+            min_v, max_v = float("inf"), float("-inf")
+            for container in self.elementToSpeed.values():
+                for speed in container:
+                    min_v = min(min_v, speed)
+                    max_v = max(max_v, speed)
+
+            self.bin_edges = np.linspace(min_v, max_v, 11)
 
         for prefix, data in [
-            ("abs", self.abs_velocities),
-            # ("x", self.x_velocities),
-            # ("y", self.y_velocities),
+            ("abs_left", self.elementToSpeed[self.left_atom]),
+            ("abs_right", self.elementToSpeed[self.right_atom]),
         ]:
             self.bin_velocities(
                 velocities=data,
-                bin_count=10,
+                bin_count=self.bin_edges,
                 prefix=prefix,
                 initialization=initialization,
             )
+
+    def bin_velocities(
+        self, velocities, bin_count, prefix, initialization=False, normalize=True
+    ):
+        if initialization:
+            bins = np.array([0] * 10)
+            bins[10 // 2] = len(velocities)  # Put all counts in the middle bin
+            value = velocities[0]
+            bin_ranges = [(value, value) for _ in range(10)]
+        else:
+            bins, edges = np.histogram(velocities, bins=bin_count, density=normalize)
+            # Convert bin edges to bin ranges for better clarity on the frontend
+            if isinstance(bin_count, int):
+                bin_ranges = [(edges[i], edges[i + 1]) for i in range(bin_count)]
+            else:
+                bin_ranges = [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
+        setattr(self, f"{prefix}_velocities_bins", bins.tolist())
+        setattr(self, f"{prefix}_velocities_bin_ranges", bin_ranges)
 
     def assess_uniformity(self, initialization: bool = False):
         # with 10 bins, each bin width is 2*np.pi/10, so the probability of each bin
@@ -231,43 +272,46 @@ class TwoCompartments:
         self.unifpVals["chi-rel"].append(pval_chi_rel)
         self.unifpVals["ks"].append(pval_ks)
 
-    def bin_velocities(
-        self, velocities, bin_count, prefix, initialization=False, normalize=True
-    ):
-        if initialization:
-            bins = np.array([0] * bin_count)
-            bins[bin_count // 2] = len(velocities)  # Put all counts in the middle bin
-            value = velocities[0]
-            bin_ranges = [(value, value) for _ in range(bin_count)]
-        else:
-            bins, edges = np.histogram(velocities, bins=bin_count, density=normalize)
-            # Convert bin edges to bin ranges for better clarity on the frontend
-            bin_ranges = [(edges[i], edges[i + 1]) for i in range(bin_count)]
-        setattr(self, f"{prefix}_velocities_bins", bins.tolist())
-        setattr(self, f"{prefix}_velocities_bin_ranges", bin_ranges)
-
     def find_equipartition_temperature(self):
-        elementToSum = {}
-        for particle in self.particles:
-            elementToSum.setdefault(particle.element, []).append(
-                particle.vx**2 + particle.vy**2
+        self.elementToSpeed = {self.left_atom: [], self.right_atom: []}
+        elementToSum = {self.left_atom: 0, self.right_atom: 0}
+        for particle in self.left_particles:
+            self.elementToSpeed[self.left_atom].append(
+                np.sqrt(particle.vx**2 + particle.vy**2)
             )
+            elementToSum[self.left_atom] += particle.vx**2 + particle.vy**2
+        for particle in self.right_particles:
+            self.elementToSpeed[self.right_atom].append(
+                np.sqrt(particle.vx**2 + particle.vy**2)
+            )
+            elementToSum[self.right_atom] += particle.vx**2 + particle.vy**2
+        maxKe = float("inf")
+        for atom, count, speed_sum in [
+            (self.left_atom, self.num_left, elementToSum[self.left_atom]),
+            (self.right_atom, self.num_right, elementToSum[self.right_atom]),
+        ]:
+            mass_speed = cnst.ATOMS_LIBRARY[atom]["mass"] * speed_sum
+            maxKe = min(maxKe, 0.5 * mass_speed)
+            self.elementToT["equipartition"].setdefault(atom, []).append(
+                cnst.TEMP_CONVERSION_FACTOR / (3 * cnst.R * 1000) * mass_speed / count
+            )
+        self.energy_wall.energy_limit = 0.05 * maxKe
 
-        for element, sums in elementToSum.items():
-            self.elementToT["equipartition"].setdefault(element, []).append(
-                cnst.TEMP_CONVERSION_FACTOR
-                * cnst.ATOMS_LIBRARY[element]["mass"]
-                / (3 * cnst.R * 1000)
-                * np.mean(sums)
-            )
+    def update_v_mp_freq(self):
+        max_bins = max(max(self.abs_left_velocities_bins), max(self.abs_right_velocities_bins))
+        new_val = min(max_bins, 2) * 1.2
+        if np.abs(new_val - self.v_mp_freq) > 0.3:
+            self.v_mp_freq = new_val
 
     def export_statistics(self):
         perc = lambda x: "{:.2f}%".format(x * 100)
         data = {
             "left_fraction": self.left_fractions[-1],
             "right_fraction": self.right_fractions[-1],
-            "abs_velocities_bins": self.abs_velocities_bins,
-            "abs_velocities_bin_ranges": self.abs_velocities_bin_ranges,
+            "abs_left_velocities_bins": self.abs_left_velocities_bins,
+            "abs_left_velocities_bin_ranges": self.abs_left_velocities_bin_ranges,
+            "abs_right_velocities_bins": self.abs_right_velocities_bins,
+            "abs_right_velocities_bin_ranges": self.abs_right_velocities_bin_ranges,
             "angle_velocities_bins": self.angle_velocities_bins,
             "angle_velocities_bin_ranges": self.angle_velocities_bin_ranges,
             "unif_pval_ks": perc(self.unifpVals["ks"][-1]),
@@ -276,6 +320,7 @@ class TwoCompartments:
             "min_temp": self.min_temp,
             "max_temp": self.max_temp,
             "v_mp_freq": self.v_mp_freq,
+            **self.particlesStyle,
         }
         for element, t in self.elementToT["equipartition"].items():
             data[f"{element.lower()}_equipartition_temperature"] = "{:.2f}".format(
@@ -293,6 +338,8 @@ class TwoCompartments:
         return data
 
     def analyze_game(self, fname: Optional[str] = None):
+        if fname is None:
+            fname = get_timestamp()
         figs = FigureMaker()
         figs.create_fractions_scatter_plot(
             self.left_fractions, self.right_fractions, fname
