@@ -21,6 +21,7 @@ def get_timestamp():
     current_datetime = datetime.now()
     return current_datetime.strftime("%Y-%m-%d %H:%M")
 
+
 class ParticleIterable:
     def __init__(self, left, right):
         self.left = left
@@ -53,16 +54,17 @@ class TwoCompartments:
         right_temperature: int = 300,
         use_quadtree: bool = False,
         update_frequency: int = 100,
+        rigid_wall: bool = False,
     ):
-        # self.particles = []
-        self.energy_wall = EnergyWall(WIDTH // 2)
         self.max_mass = max(
             cnst.ATOMS_LIBRARY[atom]["mass"] for atom in [left_atom, right_atom]
         )
 
         self.min_temp = min(left_temperature, right_temperature)
         self.max_temp = max(left_temperature, right_temperature)
-        # v_mp_freq = cnst.most_probable_freq(self.min_temp, max_mass)
+        self.rigid_wall = rigid_wall
+        if rigid_wall:
+            self.energy_wall = EnergyWall(WIDTH // 2)
         self.init_params = {
             "num_left": num_left,
             "left_atom": left_atom,
@@ -72,7 +74,9 @@ class TwoCompartments:
             "right_temperature": right_temperature,
             "use_quadtree": use_quadtree,
             "update_frequency": update_frequency,
+            "rigid_wall": rigid_wall,
         }
+        self.elToDir = {left_atom: "left", right_atom: "right"}
         self.num_left = num_left
         self.left_atom = left_atom
         self.num_right = num_right
@@ -174,7 +178,8 @@ class TwoCompartments:
 
         for particle in self.particles:
             particle.move()
-            particle.check_wall_collision(self.energy_wall)
+            if self.rigid_wall:
+                particle.check_wall_collision(self.energy_wall)
             if self.use_quadtree:
                 self.quadtree.insert(particle)
 
@@ -295,10 +300,13 @@ class TwoCompartments:
             self.elementToT["equipartition"].setdefault(atom, []).append(
                 cnst.TEMP_CONVERSION_FACTOR / (3 * cnst.R * 1000) * mass_speed / count
             )
-        self.energy_wall.energy_limit = 0.05 * maxKe
+        if self.rigid_wall:
+            self.energy_wall.energy_limit = 0.05 * maxKe
 
     def update_v_mp_freq(self):
-        max_bins = max(max(self.abs_left_velocities_bins), max(self.abs_right_velocities_bins))
+        max_bins = max(
+            max(self.abs_left_velocities_bins), max(self.abs_right_velocities_bins)
+        )
         new_val = min(max_bins, 2) * 1.2
         if np.abs(new_val - self.v_mp_freq) > 0.3:
             self.v_mp_freq = new_val
@@ -323,7 +331,7 @@ class TwoCompartments:
             **self.particlesStyle,
         }
         for element, t in self.elementToT["equipartition"].items():
-            data[f"{element.lower()}_equipartition_temperature"] = "{:.2f}".format(
+            data[f"{self.elToDir[element]}_equip_temperature"] = "{:.2f}".format(
                 np.round(t[-1], 2)
             )
         return data
@@ -345,7 +353,7 @@ class TwoCompartments:
             self.left_fractions, self.right_fractions, fname
         )
         figs.create_equipartition_scatter_plot(self.elementToT["equipartition"], fname)
-        figs.create_pval_scatter_plot(self.unifpVals.values(), fname)
+        figs.create_pval_scatter_plot(self.unifpVals.values(), self.angle_velocities_bins, self.angle_velocities_bin_ranges, fname)
 
 
 if __name__ == "__main__":

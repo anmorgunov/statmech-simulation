@@ -44,6 +44,7 @@ parser.add_argument(
 )
 parser.add_argument("-qt", "--quadtree", action="store_true", help="Use quadtree")
 parser.add_argument("-u", "--updatefrequency", type=int, default=100, help="Game update frequency")
+parser.add_argument("-rw", "--rigidwall", action="store_true", help="Use rigid wall")
 args = parser.parse_args()
 
 game = TwoCompartments(
@@ -55,6 +56,7 @@ game = TwoCompartments(
     right_temperature=args.righttemperature,
     use_quadtree=args.quadtree,
     update_frequency=args.updatefrequency,
+    rigid_wall=args.rigidwall,
 )
 
 

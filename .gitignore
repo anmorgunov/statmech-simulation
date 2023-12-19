@@ -8,6 +8,7 @@ pickles/
 .DS_Store
 /raw_data/
 graph.py
+/figures/
 
 # Latex Related
 *.aux

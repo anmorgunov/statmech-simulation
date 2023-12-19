@@ -1,4 +1,3 @@
-from .Particle import Particle
 import numpy as np
 
 class EnergyWall:
@@ -10,7 +9,7 @@ class EnergyWall:
         self.moving_alpha = 0.5
         self.running_average = 0.0
 
-    def interact_with_particle(self, particle: Particle):
+    def interact_with_particle(self, particle):
         """
         Handle the interaction between the wall and a particle.
         The wall absorbs a fraction of the particle's kinetic energy.
