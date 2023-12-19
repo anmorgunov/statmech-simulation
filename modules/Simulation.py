@@ -202,7 +202,7 @@ class TwoCompartments:
             self.compute_velocity_distribution()
             self.assess_uniformity()
             self.update_v_mp_freq()
-            self.time = 0
+            # self.time = 0
 
     def update_compartment_fractions(self):
         left_count = sum(1 for p in self.particles if p.x < WIDTH / 2 and p.special)
@@ -348,13 +348,26 @@ class TwoCompartments:
     def analyze_game(self, fname: Optional[str] = None):
         if fname is None:
             fname = get_timestamp()
+        init_temp = self.init_params["left_temperature"]
         figs = FigureMaker()
         figs.create_fractions_scatter_plot(
-            self.left_fractions, self.right_fractions, fname
+            self.left_fractions, self.right_fractions, init_temp, fname
         )
-        figs.create_equipartition_scatter_plot(self.elementToT["equipartition"], fname)
-        figs.create_pval_scatter_plot(self.unifpVals.values(), self.angle_velocities_bins, self.angle_velocities_bin_ranges, fname)
-
+        figs.create_equipartition_scatter_plot(self.elementToT["equipartition"], init_temp, fname)
+        figs.create_pval_scatter_plot(self.unifpVals.values(), self.angle_velocities_bins, self.angle_velocities_bin_ranges, init_temp, fname)
+        figs.create_speed_distribution_plot(
+            self.abs_left_velocities_bins,
+            self.abs_right_velocities_bins,
+            self.abs_left_velocities_bin_ranges,
+            self.abs_right_velocities_bin_ranges,
+            self.particlesStyle["left_color"],
+            self.particlesStyle["right_color"],
+            self.particlesStyle["left_name"],
+            self.particlesStyle["right_name"],
+            self.elementToT["equipartition"],
+            self.time,
+            fname,
+        )
 
 if __name__ == "__main__":
     # game = Game(200)

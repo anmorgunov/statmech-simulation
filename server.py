@@ -7,7 +7,7 @@ WIDTH = 800
 HEIGHT = 500
 
 app = Flask(__name__)
-parser = argparse.ArgumentParser(description="Start the game server.")
+parser = argparse.ArgumentParser(description="Start the game server. The following elements are supported H, He, C, O, N, Ne, Ar, Kr, Xe")
 parser.add_argument(
     "-nl",
     "--numleft",
@@ -33,11 +33,11 @@ parser.add_argument(
     help="Elements of the right compartment",
 )
 parser.add_argument(
-    "-lt", "--lefttemperature", type=int, default=300, help="Temperature of the left element"
+    "-lt", "--lefttemp", type=int, default=300, help="Temperature of the left element"
 )
 parser.add_argument(
     "-rt",
-    "--righttemperature",
+    "--righttemp",
     type=int,
     default=300,
     help="Temperature of the right element"
@@ -52,8 +52,8 @@ game = TwoCompartments(
     num_right=args.numright,
     left_atom=args.leftatom,
     right_atom=args.rightatom,
-    left_temperature=args.lefttemperature,
-    right_temperature=args.righttemperature,
+    left_temperature=args.lefttemp,
+    right_temperature=args.righttemp,
     use_quadtree=args.quadtree,
     update_frequency=args.updatefrequency,
     rigid_wall=args.rigidwall,
